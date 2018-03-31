@@ -21,5 +21,13 @@ fs.readFile(fsdir,'utf-8',function(err,data){
 
 });
 
+
+//输出当前
 console.log(__dirname);
 
+//输出系统查找模块的路径数组
+console.log(module.paths);
+
+
+//输出系统已有的扩展加载方式
+console.log(require.extensions)

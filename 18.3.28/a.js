@@ -1,5 +1,4 @@
-module.exports={
-    age:18,
-    name:"hhhh"
-};
+// module.exports={
+//     age:18
+// };
 exports.name='bar'

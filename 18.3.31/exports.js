@@ -10,3 +10,5 @@ exports.add = function(){
     }
     return sum;
 };
+
+exports.name = "bars";
