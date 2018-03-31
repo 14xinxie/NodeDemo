@@ -33,7 +33,7 @@ a[1]();
   * 将file1.txt的内容追加写入file2.txt
   */
 function writeContent(file1Path,file2Path,name){
-    var fs=require('fs');
+    let fs=require('fs');
     console.log(file1Path,file2Path);
     fs.readFile(file1Path,"utf-8",function(err,data){
         if(err){
@@ -58,11 +58,10 @@ writeContent(__dirname+"/file1.txt",__dirname+"/file2.txt",'谢鑫');
  * 解析url查询参数的中间件
  */
 function parseUrl(str){
-    var queryString = require('querystring');
-    var obj = queryString.parse(str);
+    let queryString = require('querystring');
+    let obj = queryString.parse(str);
     console.log(JSON.stringify(obj,2));
 }
-
 
 parseUrl('nick=casper&age=24');
     
@@ -89,8 +88,6 @@ function yellowLight(){
 }
 
 (function restart(){
-   
-
     greenLight().then((value)=>{
         console.log(value);
     });
@@ -103,8 +100,4 @@ function yellowLight(){
     redLight().then((value)=>{
         console.log(value);
     });
-    
-    
-
-    
 })();
