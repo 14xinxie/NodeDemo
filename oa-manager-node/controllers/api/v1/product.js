@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-28 17:04:50 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-04-28 17:30:03
+ * @Last Modified time: 2018-04-28 17:45:57
  */
 
 const productService = require('../../../services/product');
@@ -24,7 +24,7 @@ async function getProducts(req, res, next) {
 
   let productList = await productService.getProducts(req.query);
 
-  res.json(productList);
+  res.json(productList.rows);
 		
 }
 

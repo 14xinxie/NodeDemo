@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-28 16:34:27 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-04-28 16:58:29
+ * @Last Modified time: 2018-04-28 17:52:49
  */
 
 'use strict';
@@ -24,7 +24,6 @@ async function getProducts(options) {
 					as : 'Category'
 				}
 		],
-		group : 'category_id',
 		offset : (page-1) * pagesize,
 		limit : pagesize
 	});
