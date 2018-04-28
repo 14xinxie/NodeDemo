@@ -7,7 +7,14 @@
 
 <script>
 export default {
-  name: 'App'
+  name: 'App',
+  watch: {
+    '$route'(to, from) {
+      if (from.name === 'login' && to.name !== 'register') {
+        window.location.reload()
+      }
+    }
+  }
 }
 </script>
 
