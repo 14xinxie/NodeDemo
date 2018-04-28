@@ -33,3 +33,5 @@ function connect(publisher,extension_name,version){
 connect("mikey","vscode-fileheader","0.0.2");   
 
 connect("CoenraadS","bracket-pair-colorizer","1.0.27");   
+
+
