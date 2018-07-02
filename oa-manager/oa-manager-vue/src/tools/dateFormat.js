@@ -14,8 +14,8 @@ export default (millSeconds, fmt = 'yyyy-MM-dd hh:mm') => {
     'm+' : date.getMinutes(),
     's+' : date.getSeconds(),
     'q+' : Math.floor((date.getMonth() + 3) / 3),
-    // 'S+' : date.getMilliseconds()
-    S: date.getMilliseconds()
+    'S+' : date.getMilliseconds()
+    
   };
 
   if (/(y+)/.test(fmt)) {
