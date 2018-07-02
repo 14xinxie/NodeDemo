@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-28 16:58:36 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-04-28 17:04:30
+ * @Last Modified time: 2018-07-02 21:01:26
  */
 
 'use strict';
@@ -12,7 +12,8 @@ module.exports = {
 	addCategory,
 	delCategory,
 	modCategory,
-	getCategorysByKeyWord
+  getCategorysByKeyWord,
+  getCategoryDetail
 };
 
 
@@ -67,5 +68,8 @@ async function getCategorysByKeyWord(options) {
 
 
 async function getCategoryDetail(options) {
-    
+  let where = options.where;
+  return await db.Category.findOne({
+    where: where
+  });
 }
