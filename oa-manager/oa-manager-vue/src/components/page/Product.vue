@@ -126,15 +126,10 @@
             <el-input  v-model="addForm.addTip" auto-complete="off"></el-input>
           </el-form-item>
           <el-form-item label="产品图标" :label-width="formLabelWidth" prop="addNetSegment">
-          <el-upload 
-            action="http://localhost/goods/addNewGoodsPicture" 
-            :limit="1" 
-            :onError="uploadError" 
-            :onSuccess="uploadSuccess" 
-            list-type="picture"
-            :auto-upload="false">
-            <el-button size="small" type="primary">点击上传</el-button>
-          </el-upload>
+            <input id="fileinput" @change="uploading($event)" type="file" accept="image/*">
+             <!-- <button  @click="submit($event)"></button> -->
+            <!-- <el-button size="small" type="primary">点击上传</el-button> -->
+            <img :src="src"/>
         </el-form-item> 
         </el-col>
         
@@ -227,8 +222,10 @@
     };
 
     return {
+      file: '',
+      src: '',
       currentPage: 1,
-      pageSize: 1,
+      pageSize: 10,
       total: 1,
       schfilter: '', //搜索的关键字
       tableData: [],
@@ -531,6 +528,18 @@
       });
     },
 
+    uploading(event){
+
+    	this.file = event.target.files[0];//获取文件
+    	var windowURL = window.URL || window.webkitURL;
+      this.file = event.target.files[0];
+      //创建图片文件的url
+      this.src = windowURL.createObjectURL(event.target.files[0]);
+
+      console.log('图片的路径：'+this.src);
+
+  	},
+
     //新增表单里的确定按钮点击事件
     onAdd(formName) {
 
@@ -558,19 +567,40 @@
               count++;
             }
           }
-          //确定新增时提交的表单数据
-          let addData = {
-            name: this.addForm.addName,
-            categoryId: categoryId,
-            desc: this.addForm.addDesc,
-            url: this.addForm.addUrl,
-            tip: this.addForm.addTip,
-            netSegment: this.addForm.addNetSegment,
-            sortId: count+1,
-            iconId: 1
-          }; 
 
-          this.$http.post("/api/v1/product",addData)
+          console.log('上传的文件：'+this.file);
+
+          let addFormData = new FormData();
+
+          addFormData.append('name', this.addForm.addName);
+          addFormData.append('categoryId', this.addForm.categoryId);
+          addFormData.append('desc', this.addForm.addDesc);
+          addFormData.append('url', this.addForm.addUrl);
+          addFormData.append('tip', this.addForm.addTip);
+          addFormData.append('netSegment', this.addForm.addNetSegment);
+          addFormData.append('sortId', count+1);
+          addFormData.append('iconFile', this.file);
+
+          let confg = {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          };
+
+
+          //确定新增时提交的表单数据
+          // let addData = {
+          //   name: this.addForm.addName,
+          //   categoryId: categoryId,
+          //   desc: this.addForm.addDesc,
+          //   url: this.addForm.addUrl,
+          //   tip: this.addForm.addTip,
+          //   netSegment: this.addForm.addNetSegment,
+          //   sortId: count+1,
+          //   iconId: 1
+          // }; 
+
+          this.$http.post("/api/v1/product",addFormData,confg)
           .then((response) => {
             
             let resultCode = response.data.extData.resultCode;

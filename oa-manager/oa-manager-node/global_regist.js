@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-26 14:28:19 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-04-27 14:33:23
+ * @Last Modified time: 2018-07-03 15:03:22
  */
 
 'use strict';
@@ -21,7 +21,6 @@ global.Promise = require('bluebird');
 global.fse = require('fs-extra');
 global.logger = require('./tools/logger');
 global.db = require('./models');
-global.moment = require('moment');
 
 //global.cache          = require('./lib/cache');
 global.handleError = require('./middlewares/error-handle');

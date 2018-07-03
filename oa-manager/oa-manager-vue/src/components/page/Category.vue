@@ -111,7 +111,7 @@
     return {
       currentPage: 1,
       total: 1,
-      pageSize: 1,
+      pageSize: 10,
       tableData: [],
       editFormVisible: false,
       addFormVisible: false,

@@ -6,7 +6,7 @@ desc tbl_product_category;
 select * from tbl_product_category;
 SELECT `id`, `account`, `password`, `nick_name` AS `nickName`, `role` FROM `tbl_user` AS `User` WHERE `User`.`account` = 'aaa' AND `User`.`password` = '123' LIMIT 1;
 use oa_manager;
-insert into tbl_user values(1,'Admin123','Admin123','管理员','18720931185',1);
+insert into tbl_user values(1,'Admin123','Admin123','Admin','18720931185',1);
 
 use oa_manager;
 desc tbl_user;
@@ -35,4 +35,6 @@ insert into tbl_product values
 
 desc tbl_product;
 desc tbl_product_category;
-show create table tbl_product_category;
+use oa_manager;
+UPDATE `tbl_product` SET `name`='dad',`category_id`=2,`desc`='qq',`url`='qq',`tip`='qq',`net_segment`='outside' WHERE `id` = 5
+show create table tbl_product;

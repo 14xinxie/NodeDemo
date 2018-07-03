@@ -43,13 +43,13 @@
           align="center"
           fixed>
         </el-table-column>  
-        <el-table-column label="产品ID" prop="id" align="center" width="80" v-if="false"></el-table-column>
-        <el-table-column label="产品名称" prop="name" align="center" width="120"></el-table-column>
-        <el-table-column label="产品类型" prop="categoryName" align="center" width="120"></el-table-column>
-        <el-table-column label="产品描述" prop="desc" align="center" width="120"></el-table-column>
-        <el-table-column label="产品网址" prop="url" align="center" width="180"></el-table-column>
-        <el-table-column label="注意事项" prop="tip" align="center" width="160"></el-table-column>
-        <el-table-column label="所属网段" prop="netSegment" align="center" width="120"></el-table-column>
+        <el-table-column label="产品ID" prop="id" align="center"  v-if="false"></el-table-column>
+        <el-table-column label="产品名称" prop="name" align="center" ></el-table-column>
+        <el-table-column label="产品类型" prop="categoryName" align="center" ></el-table-column>
+        <el-table-column label="产品描述" prop="desc" align="center"></el-table-column>
+        <el-table-column label="产品网址" prop="url" align="center" ></el-table-column>
+        <el-table-column label="注意事项" prop="tip" align="center" ></el-table-column>
+        <el-table-column label="所属网段" prop="netSegment" align="center" ></el-table-column>
         <el-table-column
           fixed="right"
           label="操作"
@@ -80,9 +80,9 @@
           width="366"
           align="center">   
         </el-table-column>  
-        <el-table-column label="产品类型ID" prop="id" align="center" width="366" v-if="false" ></el-table-column>
-        <el-table-column label="产品类型排序ID" prop="orderId" align="center" width="366" v-if="false" ></el-table-column>
-        <el-table-column label="产品类型名称" prop="name" align="center" width="366"></el-table-column>
+        <el-table-column label="产品类型ID" prop="id" align="center"  v-if="false" ></el-table-column>
+        <el-table-column label="产品类型排序ID" prop="orderId" align="center"  v-if="false" ></el-table-column>
+        <el-table-column label="产品类型名称" prop="name" align="center" ></el-table-column>
         <el-table-column
           label="操作"
           width="286"
@@ -119,7 +119,7 @@
       return {
         total: 1,
         currentPage: 1,
-        pageSize: 1,
+        pageSize: 5,
         sortFlag: '',
         categoryName: '',
         categoryTableVisible: true,

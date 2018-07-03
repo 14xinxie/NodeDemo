@@ -67,7 +67,7 @@
     data() {
     return {
       total: 1,
-      pageSize: 1,
+      pageSize: 10,
       tableData: [],
       searchForm: {},
       formLabelWidth: '80px'
@@ -77,7 +77,7 @@
     //vue实例创建时执行该生命周期方法
   created: function () {
     this.getLogs('/api/v1/logs');
-    this.getLogs('/api/v1/logs?page=1&pagesize=1');
+    this.getLogs('/api/v1/logs?page=1&pagesize='+this.pageSize);
   },
   methods: {
 
@@ -106,7 +106,9 @@
               let log = {};
               log.id = result[i].id; //日志ID
               //使用日期格式转换工具将时间戳转换成日期格式
+              console.log('转换之前的日期：'+result[i].createTime);
               log.createTime = dateFormat(result[i].createTime); //日志创建时间
+              console.log('转换之后的日期：'+log.createTime);
               // log.createTime = result[i].createTime;
               log.content = result[i].content; //日志内容
               data[i] = log;
