@@ -23,7 +23,9 @@
     </div>
     </div>
 </div>
-<div class="mainbox">
+<!-- <div class="mainbox" v-for="i in 4" v-key="asas"> -->
+  <span>$i</span>
+  <div class="mainbox">
     <h2 class="title recom">
         OA办公
     </h2>
@@ -73,7 +75,9 @@
             </dl>
         </li>
     </ul>
+  <!-- </div> -->
 </div>
+
 
 <div class="mainbox">
     <h2 class="title recom">
@@ -145,29 +149,133 @@
   export default {
     data() {
       return {
-        name: 'linxin'
+        name: 'linxin',
+        categoryList: [],
+        productList: []
       }
     },
-    computed:{
-      nickName(){
+    computed: {
+      nickName() {
         let user = JSON.parse(sessionStorage.getItem('user'));
         let nickName = user.nickName;
         console.log("首页中session用户信息："+JSON.stringify(user));
         return nickName ? nickName : this.name;
       }
     },
-    methods:{
-        handleCommand(command) {
 
-          console.log('下拉框');
-            if(command == 'loginout'){
-                sessionStorage.removeItem('ms_username')
-                sessionStorage.removeItem('ms_userId')
-                this.$router.push('/login');
-            } else if (command == 'userCenter') {
-                this.$router.push('/userCenter');
+    created: function () {
+      this.getProducts('/api/v1/products');
+    },
+    methods: {
+      handleCommand(command) {
+
+        console.log('下拉框');
+          if(command == 'loginout'){
+              sessionStorage.removeItem('ms_username')
+              sessionStorage.removeItem('ms_userId')
+              this.$router.push('/login');
+          } else if (command == 'userCenter') {
+              this.$router.push('/userCenter');
+          }
+      },
+      //获取产品信息列表数据
+      getProducts(url) {
+
+        this.$http.get('/api/v1/categorys')
+        .then((response) => {
+          //获取返回的结果码
+          let resultCode = response.data.extData.resultCode;
+
+          if (resultCode === 1) {
+            this.$message({
+              type: 'success',
+              message: '获取产品类型信息列表成功'
+            });  
+
+            //获取返回的产品信息列表数据
+            let result = response.data.extData.categoryList.rows;
+            this.categoryList = result;
+          } else {
+            this.$message({
+              type: 'error',
+              message: '获取产品类型信息列表失败'
+            });
+          }
+
+        }).catch((err) => {
+          this.$message({
+            type: 'error',
+            message: '获取产品类型信息列表失败'
+          });
+          console.log(error);
+        })
+
+        this.$http.get(url)
+        .then((response) => {
+
+          console.log("数据来了");
+          //获取返回的结果码
+          let resultCode = response.data.extData.resultCode;
+
+          if (resultCode === 1) {
+            this.$message({
+              type: 'success',
+              message: '获取产品信息列表成功'
+            });  
+
+            //获取返回的产品信息列表数据
+            let result = response.data.extData.productList.rows;
+
+            if (url === '/api/v1/products') {
+              //获取产品信息列表的记录数
+              this.total = response.data.extData.productList.count;
+            } else {
+              //将产品信息列表数据先按照categoryId升序排序
+              //若categoryId相同，则按照sortId升序排序
+              result.sort(function(a,b) {
+                if (a.categoryId!==b.categoryId) {
+                  return a.categoryId-b.categoryId;
+                } else {
+                  return a.sortId-b.sortId;
+                }
+              });
+
+              //解析产品信息列表数据，并将其赋值给tableData
+              //使数据显示在表格上
+              for (let i = 0; i < result.length; i++) {
+
+                let product = {};
+                product.id = result[i].id; //产品ID
+                product.name = result[i].name; //产品名称
+                product.categoryName = result[i].Category.name; //产品类型
+                product.desc = result[i].desc; //产品描述
+                product.url = result[i].url; //产品网址
+                product.tip = result[i].tip; // 产品注意事项
+                product.netSegment = result[i].netSegment; //产品所属网段
+                data[i] = product;
+              }   
+              this.tableData = data;
             }
-        }
+            
+          } else {
+            this.$message({
+              type: 'error',
+              message: '获取产品信息列表失败'
+            });
+          }
+          //服务器请求错误                        
+        }).catch((error) => {    
+
+          this.$message({
+            type: 'error',
+            message: '获取产品信息列表失败'
+          });
+          console.log(error);
+
+        });
+      },
+    
+
     }
   }
 </script>

@@ -129,7 +129,7 @@
             <input id="fileinput" @change="uploading($event)" type="file" accept="image/*">
              <!-- <button  @click="submit($event)"></button> -->
             <!-- <el-button size="small" type="primary">点击上传</el-button> -->
-            <img :src="src"/>
+            <!-- <img :src="src"/> -->
         </el-form-item> 
         </el-col>
         
@@ -531,12 +531,17 @@
     uploading(event){
 
     	this.file = event.target.files[0];//获取文件
+      // if (this.file === null) {
+      //   console.log('请上传文件...');
+      // }
     	var windowURL = window.URL || window.webkitURL;
       this.file = event.target.files[0];
+
+      
       //创建图片文件的url
       this.src = windowURL.createObjectURL(event.target.files[0]);
 
-      console.log('图片的路径：'+this.src);
+      console.log('图片的路径：'+this.file.name);
 
   	},
 
@@ -568,12 +573,19 @@
             }
           }
 
-          console.log('上传的文件：'+this.file);
+          if (this.file === '') {
+            this.$message({
+              type: 'info',
+              message: '请先上传图片'
+            }); 
+            return;
+          }
+          
 
           let addFormData = new FormData();
 
           addFormData.append('name', this.addForm.addName);
-          addFormData.append('categoryId', this.addForm.categoryId);
+          addFormData.append('categoryId', categoryId);
           addFormData.append('desc', this.addForm.addDesc);
           addFormData.append('url', this.addForm.addUrl);
           addFormData.append('tip', this.addForm.addTip);

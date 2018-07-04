@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-28 09:46:50 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-04-28 15:51:08
+ * @Last Modified time: 2018-07-04 18:54:01
  */
 'use strict';
 module.exports = function (sequelize, DataTypes) {
@@ -56,9 +56,9 @@ module.exports = function (sequelize, DataTypes) {
 			allowNull : false,
 			comment : 'OA产品内部排序id'
 		},
-		iconId : {
-			field : 'icon_id',
-			type : DataTypes.INTEGER,
+		iconName : {
+			field : 'icon_name',
+			type : DataTypes.STRING(50),
 			allowNull : false,
 			comment : 'OA产品图标id'
 		}

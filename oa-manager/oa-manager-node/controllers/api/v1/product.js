@@ -2,12 +2,19 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-28 17:04:50 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-07-03 20:43:32
+ * @Last Modified time: 2018-07-04 19:18:38
  */
 
 const productService = require('../../../services/product');
 
 const categoryService = require('../../../services/category');
+
+const multiparty = require('multiparty');
+const fs         = require('fs');
+const uuid       = require('uuid');
+
+const path       = require('path');
+
 
 module.exports = handleError({
   getProducts,
@@ -46,44 +53,87 @@ async function getProducts(req, res, next) {
 
 async function addProduct(req, res, next) {
 
-  let schema = {
-    name: { in: 'body', notEmpty: true },
-    desc: { in: 'body', notEmpty: true },
-    url: { in: 'body', notEmpty: true },
-    categoryId: { in: 'body', isInt: true, optional: true },
-    tip: { in: 'body', notEmpty: true },
-    netSegment: { in: 'body', notEmpty: true },
-    sortId: { in: 'body', isInt: true, optional: true }
-  };
+  let form = new multiparty.Form();
+  //设置form表单传入的字段属性、属性值的编码。默认为utf8。
+  form.encoding = 'utf-8';
+  //设置上传的文件的保存目录，该目录必须存在
+  form.uploadDir='public/upload/'  
 
-  console.log('提交的数据：'+JSON.stringify(req.body));
-
-  await paramValidator(schema, req);
-
-  console.log('接收到的文件：'+req.files.name);
-
-  let user = req.session.user;
-
-  console.log("管理员用户信息：" + JSON.stringify(user));
-  let addLog = {
-    userId: user.id,
-    content: user.nickName + '添加了产品' + req.body.name
-  };
-  
-  let addOptions = {
-    product: req.body,
-    log: addLog
-  };
-  try {
+  //console.log('生成的UUID码：'+uuid.v1());
+  //表单数据解析
+  form.parse(req, async function (err, fields, files) {
     
-    await productService.addProduct(addOptions);
-    return next({ code: 0, msg: '添加产品成功', ext: { resultCode: 1 } });
-  } catch (error) {
+    let formData = {};
 
-    console.log(error);
-    return next({ code: 1, msg: '添加产品失败', ext: { resultCode: 0 } });
-  }
+    let file = files['iconFile'][0];
 
+    //获取文件类型
+    let fileType = path.extname(file.originalFilename);
+
+    // console.log('接收到的文件：'+JSON.stringify(file));
+
+    for(let item in fields) {
+      
+      formData[item] = fields[item].toString();
+    }
+
+    //增加表单项iconName，存储图标的名称
+    formData['iconName'] = uuid.v1()+fileType+'';
+
+    console.log('文件名：'+formData['iconName']);
+
+    //对上传的文件重命名
+    fs.renameSync(file.path,form.uploadDir+formData['iconName']);
+   
+    //将表单的数据赋值给req.body
+    req.body = formData;
+
+    let schema = {
+      name: { in: 'body', notEmpty: true },
+      desc: { in: 'body', notEmpty: true },
+      url: { in: 'body', notEmpty: true },
+      categoryId: { in: 'body', isInt: true, optional: true },
+      tip: { in: 'body', notEmpty: true },
+      netSegment: { in: 'body', notEmpty: true },
+      sortId: { in: 'body', isInt: true, optional: true },  
+      iconName: { in: 'body', notEmpty: true }
+    };
+  
+    console.log('提交的数据：'+JSON.stringify(req.body));
+  
+    await paramValidator(schema, req);
+
+    console.log('文件存储的路径：'+file.path);
+  
+
+    console.log('请求头中的信息：'+JSON.stringify(req.body));
+    let user = req.session.user;
+
+    console.log("管理员用户信息：" + JSON.stringify(user));
+    let addLog = {
+      userId: user.id,
+      content: user.nickName + '添加了产品' + req.body.name
+    };
+    
+    let addOptions = {
+      product: req.body,
+      log: addLog
+    };
+    try {
+      
+      await productService.addProduct(addOptions);
+      return next({ code: 0, msg: '添加产品成功', ext: { resultCode: 1 } });
+    } catch (error) {
+
+      console.log(error);
+      return next({ code: 1, msg: '添加产品失败', ext: { resultCode: 0 } });
+    }
+
+  
+    data = JSON.stringify(fields);
+    console.log('表单中的文件：'+JSON.stringify(files));
+  });
+  
 }
 
 async function delProduct(req, res, next) {

@@ -26,10 +26,9 @@ function hkdfDeriveFn(name) {
     props = props || {};
     var salt = props.salt;
     if (!salt || 0 === salt.length) {
-      salt = new Buffer(hashLen);
-      salt.fill(0);
+      salt = Buffer.alloc(hashLen);
     }
-    var info = props.info || new Buffer(0);
+    var info = props.info || Buffer.alloc(0);
     var keyLen = props.length || hashLen;
 
     var promise;
@@ -44,10 +43,10 @@ function hkdfDeriveFn(name) {
       }
 
       if (!T) {
-        T = new Buffer(0);
+        T = Buffer.alloc(0);
       }
-      T = Buffer.concat([T, info, new Buffer([idx])]);
-      T = op(key, T, { loose: true });
+      T = Buffer.concat([T, info, Buffer.from([idx])]);
+      T = op(key, T);
       T = T.then(function(result) {
         T = result.mac;
         okm.push(T);
@@ -58,7 +57,7 @@ function hkdfDeriveFn(name) {
     }
 
     // Step 1: Extract
-    promise = op(salt, key, { loose: true });
+    promise = op(salt, key, { length: salt.length * 8 });
     promise = promise.then(function(result) {
       // Step 2: Expand
       return expand(result.mac);
