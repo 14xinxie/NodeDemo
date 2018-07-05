@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-28 16:58:36 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-07-03 17:13:05
+ * @Last Modified time: 2018-07-05 10:05:20
  */
 
 'use strict';
@@ -21,12 +21,21 @@ async function getCategorys(options) {
 
 	let where = options.where;
   let page = options.page;
-	let pagesize = options.pagesize;
-	return await db.Category.findAndCount({
-		where : where,
-		offset : (page-1) * pagesize,
-		limit : pagesize
-	});
+  let pagesize = options.pagesize;
+  
+  //判断page和pagesize是否未定义，如果是，则查询所有，不进行分页查询
+  if (page === undefined && pagesize === undefined) {
+    return await db.Category.findAndCount({
+      where : where
+    });
+  } else {
+    return await db.Category.findAndCount({
+      where : where,
+      offset : (page-1) * pagesize,
+      limit : pagesize
+    });
+  }
+  
 }
 
 async function addCategory(options) {

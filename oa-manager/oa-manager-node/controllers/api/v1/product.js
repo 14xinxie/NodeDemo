@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-28 17:04:50 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-07-04 19:18:38
+ * @Last Modified time: 2018-07-05 09:56:28
  */
 
 const productService = require('../../../services/product');
@@ -28,10 +28,13 @@ module.exports = handleError({
 async function getProducts(req, res, next) {
 
   let schema = {
-    page: { in: 'query', isInt: true, defaultValue: 1, optional: true },
-    pagesize: { in: 'query', isInt: true, defaultValue: 10, optional: true }
+    page: { in: 'query', isInt: true, optional: true },
+    pagesize: { in: 'query', isInt: true, optional: true }
   };
   await paramValidator(schema, req);
+
+  console.log('page:'+req.query.page);
+  console.log('pagesize:'+req.query.pagesize);
 
   let getOptions = {
     where: {},

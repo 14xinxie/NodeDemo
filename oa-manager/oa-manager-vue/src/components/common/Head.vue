@@ -4,8 +4,8 @@
     <div class="user-info">
       <el-dropdown trigger="click" @command="handleCommand">
           <span class="el-dropdown-link">
-              <img class="user-logo" src="../../../static/img/img.jpg">
-            {{uNickName}}
+            <img class="user-logo" src="../../../static/img/img.jpg">
+            <span class="user-name">{{uNickName}}</span>
         </span>
         <el-dropdown-menu slot="dropdown">
             <el-dropdown-item command="userCenter">个人中心</el-dropdown-item>
@@ -71,14 +71,19 @@
         cursor: pointer;
         vertical-align: middle;
     }
+    .user-name {
+      position: relative;
+      left: -10px;
+    }
     .user-info .user-logo{
         position: absolute;
-        left:0;
+        left:-10px;
         top:15px;
         width:40px;
         height:40px;
         border-radius: 50%;
     }
+  
     .el-dropdown-menu-item{
         text-align: center;
     }

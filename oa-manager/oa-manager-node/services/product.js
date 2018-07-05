@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-28 16:34:27 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-07-03 17:20:37
+ * @Last Modified time: 2018-07-05 10:07:32
  */
 
 'use strict';
@@ -21,15 +21,28 @@ async function getProducts(options) {
   let page = options.page;
   let pagesize = options.pagesize;
   let where = options.where;
-  return await db.Product.findAndCount({
-    include: [{
-      model: db.Category,
-      as: 'Category'
-    }],
-    where: where,
-    offset: (page - 1) * pagesize,
-    limit: pagesize
-  });
+
+  //判断page和pagesize是否未定义，如果是，则查询所有，不进行分页查询
+  if (page === undefined || pagesize === undefined) {
+    return await db.Product.findAndCount({
+      include: [{
+        model: db.Category,
+        as: 'Category'
+      }],
+      where: where
+    });
+  } else {
+    return await db.Product.findAndCount({
+      include: [{
+        model: db.Category,
+        as: 'Category'
+      }],
+      where: where,
+      offset: (page - 1) * pagesize,
+      limit: pagesize
+    });
+  }
+  
 };
 
 async function addProduct(options) {
@@ -51,8 +64,6 @@ async function addProduct(options) {
     // err 是拒绝 promise 链返回到事务回调的错误
     console.log("产品添加失败" + err);
   });
-
-  //return await db.Product.create(product);
 }
 
 async function delProduct(options) {
