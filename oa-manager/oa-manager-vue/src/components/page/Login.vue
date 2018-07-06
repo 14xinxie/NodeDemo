@@ -112,9 +112,9 @@
 
 								sessionStorage.setItem('user',JSON.stringify(result.user));
 								if (result.user.role == 1) {
-										this.$router.push('/admin');
+                  this.$router.push('/admin');
 								} else if (result.user.role == 0) {
-										this.$router.push('/index');
+                  this.$router.push('/index');
 								}
 							} else if (result.resultCode == 0) {
 
@@ -124,12 +124,12 @@
 							}
 							
 						}).catch((error) => {
-								console.log(error);
+              console.log(error);
 						});
 					//表单验证未通过
 					} else {
-							console.log('表单验证未通过');
-							return false;
+            console.log('表单验证未通过');
+            return false;
 					}
 				});
 			},

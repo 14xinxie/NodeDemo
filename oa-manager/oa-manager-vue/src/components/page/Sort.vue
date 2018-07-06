@@ -37,11 +37,13 @@
           width="50">  
         </el-table-column>
         <el-table-column
-          type="index"
+          inline-template
+          :context="_self"
           label="序号"
           width="80"
           align="center"
           fixed>
+          <span>{{$index+addIndex}}</span>
         </el-table-column>  
         <el-table-column label="产品ID" prop="id" align="center"  v-if="false"></el-table-column>
         <el-table-column label="产品名称" prop="name" align="center" ></el-table-column>
@@ -56,8 +58,8 @@
           width="120"
           align="center">
           <template slot-scope="scope">
-            <el-button @click="onProductUp(scope.$index, scope.row)" type="text" size="small" v-show="scope.$index > 0">上移</el-button>
-            <el-button @click="onProductDown(scope.$index, scope.row)" type="text" size="small" v-show="scope.$index <= productTableData.length-1">下移</el-button>
+            <el-button @click="onProductUp(scope.$index+addIndex, scope.row)" type="text" size="small" v-show="(scope.$index+addIndex) > 1">上移</el-button>
+            <el-button @click="onProductDown(scope.$index+addIndex, scope.row)" type="text" size="small" v-show="(scope.$index+addIndex) < productList.length">下移</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -75,10 +77,12 @@
           width="50">
         </el-table-column>
         <el-table-column
-          type="index"
+          inline-template
+          :context="_self"
           label="序号"
           width="366"
-          align="center">   
+          align="center"> 
+          <span>{{$index+addIndex}}</span>  
         </el-table-column>  
         <el-table-column label="产品类型ID" prop="id" align="center"  v-if="false" ></el-table-column>
         <el-table-column label="产品类型排序ID" prop="orderId" align="center"  v-if="false" ></el-table-column>
@@ -88,8 +92,8 @@
           width="286"
           align="center">
           <template slot-scope="scope">
-            <el-button @click="onCategoryUp(scope.$index, scope.row)" type="text" size="small" v-show="scope.row.orderId >= 0 ">上移</el-button>
-            <el-button @click="onCategoryDown(scope.$index, scope.row)" type="text" size="small" v-show="scope.row.orderId < total">下移</el-button>
+            <el-button @click="onCategoryUp(scope.$index+addIndex, scope.row)" type="text" size="small" v-show="(scope.$index+addIndex) > 1">上移</el-button>
+            <el-button @click="onCategoryDown(scope.$index, scope.row)" type="text" size="small" v-show="(scope.$index+addIndex) < categoryList.length">下移</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -120,6 +124,7 @@
         total: 1,
         currentPage: 1,
         pageSize: 5,
+        addIndex: 1,
         sortFlag: '',
         categoryName: '',
         categoryTableVisible: true,
@@ -129,6 +134,7 @@
         categoryTableData: [], 
         productTableData: [],
         categoryList: {},
+        productList: {},
         formLabelWidth: '80px'
       }
     },
@@ -139,7 +145,6 @@
       this.categoryTableVisible = true;
       this.productTableVisible = false;
       this.selectVisible = false;
-      //this.refreshData();
       this.getCategorys('/api/v1/categorys');
       this.getCategorys('/api/v1/categorys?page=1'+'&pagesize='+this.pageSize);
     
@@ -164,12 +169,14 @@
               message: '获取产品信息列表成功'
             });  
 
+            //获取返回的产品信息列表数据
+            let result = response.data.extData.productList.rows;
+
             if (url.indexOf('?') === -1) {
               this.total = response.data.extData.productList.count;
+              this.productList = result;
             } else {
-              //获取返回的产品信息列表数据
-              let result = response.data.extData.productList.rows;
-      
+            
               //将产品信息列表数据先按照categoryId升序排序
               //若categoryId相同，则按照sortId升序排序
               result.sort(function(a,b) {
@@ -232,13 +239,13 @@
               message: '获取产品类型列表成功'
             });  
 
-            if (url.indexOf('?') === -1) {
-              this.total = response.data.extData.categoryList.count;
-            }
+            // if (url.indexOf('?') === -1) {
+            //   this.total = response.data.extData.categoryList.count;
+            // }
             //获取返回的产品类型列表数据
             let result = response.data.extData.categoryList.rows;
 
-            if (url === '/api/v1/categorys') {
+            if (url.indexOf('?') === -1) {
               //获取产品类型列表的记录数
               this.total = response.data.extData.categoryList.count;
               this.categoryList = result;
@@ -329,6 +336,7 @@
 
       handleCurrentChange(val) {
         this.currentPage = val;
+        this.addIndex = (this.currentPage - 1) * this.pageSize +1;
         if (this.categoryTableVisible === true) {
           this.getCategorys('/api/v1/categorys?page='+this.currentPage+'&pagesize='+this.pageSize);
         } else if (this.productTableVisible === true) {
@@ -345,7 +353,8 @@
 
       //产品排序中的上移按钮点击事件
       onProductUp(index, row) {
-        
+        console.log('点击的index:'+index);
+        console.log('点击的row:'+JSON.stringify(row));
       },
 
       //产品排序中的下移按钮的点击事件

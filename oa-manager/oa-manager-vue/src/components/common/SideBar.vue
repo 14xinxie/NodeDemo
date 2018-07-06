@@ -26,22 +26,22 @@
                 items: [
                     {
                         icon: 'el-icon-setting',
-                        index: 'admin',
+                        index: '/admin',
                         title: '产品信息管理'
                     },
                     {
                         icon: 'el-icon-setting',
-                        index: 'category',
+                        index: '/admin/category',
                         title: '产品类型管理'
                     },
                     {
                         icon: 'el-icon-setting',
-                        index: 'sort',
+                        index: '/admin/sort',
                         title: '产品排序管理'
                     },
                     {
                         icon: 'el-icon-setting',
-                        index: 'Log',
+                        index: '/admin/Log',
                         title: '日志管理'
                     },
                     {
@@ -64,7 +64,7 @@
         },
         computed:{
             onRoutes(){
-                return this.$route.path.replace('/','');
+              return this.$route.path;
             }
         }
     }

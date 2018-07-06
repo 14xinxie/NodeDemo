@@ -24,11 +24,14 @@
           width="50">  
         </el-table-column>  
         <el-table-column
-            type="index"
-            label="序号"
-            width="160"
-            align="center">
-        </el-table-column>
+          inline-template
+          :context="_self"
+          label="序号"
+          width="160"
+          align="center"
+          fixed>
+          <span>{{$index+addIndex}}</span>
+        </el-table-column>   
         <el-table-column label="日志ID" prop="id" align="center"  v-if="false"></el-table-column>
         <el-table-column label="操作时间" prop="createTime" align="center" ></el-table-column>
         <el-table-column label="日志内容" prop="content" align="center" ></el-table-column>
@@ -68,6 +71,7 @@
     return {
       total: 1,
       pageSize: 10,
+      addIndex: 1,
       tableData: [],
       searchForm: {},
       formLabelWidth: '80px'
@@ -191,6 +195,7 @@
     //分页器中页码改变的监听事件
     handleCurrentChange(val) {
       this.currentPage = val;
+      this.addIndex = (this.currentPage - 1) * this.pageSize +1;
       this.getLogs('/api/v1/logs?page='+this.currentPage+'&pagesize='+this.pageSize);
     }
 

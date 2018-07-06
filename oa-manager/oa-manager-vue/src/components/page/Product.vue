@@ -26,12 +26,14 @@
           width="50">  
         </el-table-column>
         <el-table-column
-          type="index"
+          inline-template
+          :context="_self"
           label="序号"
           width="80"
           align="center"
-          fixed>   
-        </el-table-column>    
+          fixed>
+          <span>{{$index+addIndex}}</span>
+        </el-table-column>   
         <el-table-column label="产品ID" prop="id" align="center"  v-if="false"></el-table-column>
         <el-table-column label="产品名称" prop="name" align="center" ></el-table-column>
         <el-table-column label="产品类型" prop="categoryName" align="center" ></el-table-column>
@@ -227,6 +229,7 @@
       currentPage: 1,
       pageSize: 10,
       total: 1,
+      addIndex: 1,
       schfilter: '', //搜索的关键字
       tableData: [],
       editFormVisible: false,
@@ -593,24 +596,12 @@
           addFormData.append('sortId', count+1);
           addFormData.append('iconFile', this.file);
 
+          //设置formData提交的数据格式为multipart/form-data
           let confg = {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
           };
-
-
-          //确定新增时提交的表单数据
-          // let addData = {
-          //   name: this.addForm.addName,
-          //   categoryId: categoryId,
-          //   desc: this.addForm.addDesc,
-          //   url: this.addForm.addUrl,
-          //   tip: this.addForm.addTip,
-          //   netSegment: this.addForm.addNetSegment,
-          //   sortId: count+1,
-          //   iconId: 1
-          // }; 
 
           this.$http.post("/api/v1/product",addFormData,confg)
           .then((response) => {
@@ -663,6 +654,8 @@
 
     handleCurrentChange(val) {
       this.currentPage = val;
+
+      this.addIndex = (this.currentPage - 1) * this.pageSize +1;
       console.log(`当前页: ${val}`);
       this.getProducts('/api/v1/products?page='+this.currentPage+'&pagesize='+this.pageSize);
     },
