@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-28 17:04:50 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-07-05 09:56:28
+ * @Last Modified time: 2018-07-07 15:40:48
  */
 
 const productService = require('../../../services/product');
@@ -182,14 +182,19 @@ async function delProduct(req, res, next) {
 
 async function modProduct(req, res, next) {
 
+  
+  console.log('更新的params请求数据：'+JSON.stringify(req.params));
+
+  console.log('更新的body请求数据：'+JSON.stringify(req.body));
+
   let schema = {
     id: { in: 'params', isInt: true, optional: false },
-    name: { in: 'body', notEmpty: false },
-    desc: { in: 'body', notEmpty: false },
-    url: { in: 'body', notEmpty: false },
+    name: { in: 'body', notEmpty: true, optional: true },
+    desc: { in: 'body', notEmpty: true, optional: true},
+    url: { in: 'body', notEmpty: true, optional: true },
     categoryId: { in: 'body', isInt: true, optional: true },
-    tip: { in: 'body', notEmpty: false },
-    netSegment: { in: 'body', notEmpty: false },
+    tip: { in: 'body', notEmpty: true, optional: true },
+    netSegment: { in: 'body', notEmpty:true, optional: true },
     sortId: { in: 'body', isInt: true, optional: true }
   };
 
@@ -204,17 +209,28 @@ async function modProduct(req, res, next) {
 
   console.log('修改前的产品信息：'+JSON.stringify(oldProduct));
 
-  let getCateOptions = {
-    where: { id: req.body.categoryId }
-  };
   
-  //获取修改后的产品类型名称
-  let newCategory = await categoryService.getCategoryDetail(getCateOptions);
 
   //获取session中的用户信息
   let user = req.session.user;
 
   let logContent = '';
+
+  if (req.body.categoryId !== undefined) {
+    let getCateOptions = {
+      where: { id: req.body.categoryId }
+    };
+
+    //获取修改后的产品类型名称
+    let newCategory = await categoryService.getCategoryDetail(getCateOptions);
+
+    if (newCategory.name !== undefined && oldProduct.Category.name !== newCategory.name) {
+      logContent += '修改产品类型名称'+oldProduct.Category.name+'为'+newCategory.name;
+    }
+  }
+  
+  
+  
 
   //判断产品各个字段的信息是否被修改，并增加相应的日志信息
   if (req.body.name !== undefined &&oldProduct.name !== req.body.name) {
@@ -226,9 +242,7 @@ async function modProduct(req, res, next) {
   if (req.body.url !== undefined && oldProduct.url !== req.body.url) {
     logContent += '修改产品网址'+oldProduct.url+'为'+req.body.url;
   } 
-  if (newCategory.name !== undefined && oldProduct.Category.name !== newCategory.name) {
-    logContent += '修改产品类型名称'+oldProduct.Category.name+'为'+newCategory.name;
-  }
+  
   if (req.body.tip !== undefined && oldProduct.tip !== req.body.tip) {
     logContent += '修改产品注意事项'+oldProduct.tip+'为'+req.body.tip;
   } 

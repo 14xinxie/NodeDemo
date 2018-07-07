@@ -92,8 +92,8 @@
           width="286"
           align="center">
           <template slot-scope="scope">
-            <el-button @click="onCategoryUp(scope.$index+addIndex, scope.row)" type="text" size="small" v-show="(scope.$index+addIndex) > 1">上移</el-button>
-            <el-button @click="onCategoryDown(scope.$index, scope.row)" type="text" size="small" v-show="(scope.$index+addIndex) < categoryList.length">下移</el-button>
+            <el-button @click="onCategoryUp(scope.$index+addIndex)" type="text" size="small" v-show="(scope.$index+addIndex) > 1">上移</el-button>
+            <el-button @click="onCategoryDown(scope.$index+addIndex)" type="text" size="small" v-show="(scope.$index+addIndex) < categoryList.length">下移</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -135,6 +135,7 @@
         productTableData: [],
         categoryList: {},
         productList: {},
+        categoryId: 1,
         formLabelWidth: '80px'
       }
     },
@@ -302,16 +303,15 @@
           this.productTableVisible = true;
           this.selectVisible = true;
           this.categoryName = this.categoryList[0].name;
-          let categoryId = 1; //给categoryId赋初值，默认为1
           for (let i=0;i<this.categoryList.length;i++) {
             if (this.categoryList[i].name === this.categoryList[0].name) {
-              categoryId = this.categoryList[i].id;
+              this.categoryId = this.categoryList[i].id;
             }
           }
 
           this.currentPage = 1;
-          this.getProducts('/api/v1/products/'+categoryId);
-          this.getProducts('/api/v1/products/'+categoryId+'?page=1&pagesize='+this.pageSize);
+          this.getProducts('/api/v1/products/'+this.categoryId);
+          this.getProducts('/api/v1/products/'+this.categoryId+'?page=1&pagesize='+this.pageSize);
           console.log("产品列表");
         }
       },
@@ -321,16 +321,15 @@
         this.categoryTableVisible = false;
         this.productTableVisible = true;
 
-        //this.getProductTableData(value);
         this.categoryName = value;
-        let categoryId = 1; //给categoryId赋初值，默认为1
+
         for (let i=0;i<this.categoryList.length;i++) {
           if (this.categoryList[i].name === value) {
-            categoryId = this.categoryList[i].id;
+            this.categoryId = this.categoryList[i].id;
           }
         }
-        this.getProducts('/api/v1/products/'+categoryId);
-        this.getProducts('/api/v1/products/'+categoryId+'?page=1&pagesize='+this.pageSize);
+        this.getProducts('/api/v1/products/'+this.categoryId);
+        this.getProducts('/api/v1/products/'+this.categoryId+'?page=1&pagesize='+this.pageSize);
         console.log("选择的值："+value);
       },
 
@@ -341,24 +340,98 @@
           this.getCategorys('/api/v1/categorys?page='+this.currentPage+'&pagesize='+this.pageSize);
         } else if (this.productTableVisible === true) {
 
-          let categoryId = 1; //给categoryId赋初值，默认为1
           for (let i=0;i<this.categoryList.length;i++) {
             if (this.categoryList[i].name === this.categoryName) {
-              categoryId = this.categoryList[i].id;
+              this.categoryId = this.categoryList[i].id;
             }
           }
-          this.getProducts('/api/v1/products/'+categoryId+'?page='+this.currentPage+'&pagesize='+this.pageSize);
+          this.getProducts('/api/v1/products/'+this.categoryId+'?page='+this.currentPage+'&pagesize='+this.pageSize);
         }
       },
 
       //产品排序中的上移按钮点击事件
-      onProductUp(index, row) {
-        console.log('点击的index:'+index);
-        console.log('点击的row:'+JSON.stringify(row));
+      onProductUp(index) {
+
+        console.log('点击的数据：'+JSON.stringify(this.productList[index-1]));
+
+        console.log('点击的上一行数据：'+JSON.stringify(this.productList[index-2]));
+
+        let prevId = this.productList[index-2].id;
+
+        let currId = this.productList[index-1].id;
+
+        let prevSortId = this.productList[index-2].sortId;
+
+        let currSorId = this.productList[index-1].sortId;
+
+        let currData = {
+          sortId: currSorId
+        };
+
+        let preData = {
+          sortId: prevSortId
+        };
+
+        // this.$http.put("/api/v1/product/"+prevId, currData)
+        // .then((response) => {
+        //   let resultCode = response.data.extData.resultCode;
+        //     if (resultCode === 1) {
+
+        //       this.$message({
+        //         type: 'success',
+        //         message: '修改成功'
+        //       });     
+
+        //       this.$http.put("/api/v1/product/"+currId, preData)
+        //       .then((response) => {
+        //         let resultCode = response.data.extData.resultCode;
+        //         if (resultCode === 1) {
+        //           this.$message({
+        //             type: 'success',
+        //             message: '修改成功'
+        //           });     
+
+        //           this.getProducts('/api/v1/products/'+this.categoryId+'?page='+this.currentPage+'&pagesize='+this.pageSize);
+        //         } else {
+        //           this.$message({
+        //             type: 'error',
+        //             message: '修改失败'
+        //           });   
+        //         }
+        //       }).catch((err) => {
+        //         this.$message({
+        //           type: 'error',
+        //           message: '修改失败'
+        //         });   
+        //         console.log(err);
+        //       });
+        //       //刷新表格数据
+        //       //this.getProducts('/api/v1/products?page='+this.currentPage+'&pagesize='+this.pageSize);
+        //     } else {
+
+        //       this.$message({
+        //         type: 'error',
+        //         message: '修改失败'
+        //       });    
+        //     }
+        // }).catch((err) => {
+        //   this.$message({
+        //     type: 'error',
+        //     message: '修改顺序失败'
+        //   });
+        //   console.log(error);
+        // });
+
+        // console.log('点击的上一行数据：'+JSON.stringify(this.productList[index-2]));
+        // //this.$http.put('/api/v1/product/'+this.productList[firstIndex-1].id,{sortId:})
+        // console.log('点击的当前index:'+index);
+        // console.log('点击的scope:'+JSON.stringify(scope));
+        
+        //console.log('点击的row:'+JSON.stringify(scope));
       },
 
       //产品排序中的下移按钮的点击事件
-      onProductDown(index, row) {
+      onProductDown(index) {
 
       },
 
