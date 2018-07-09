@@ -115,6 +115,18 @@
     <el-dialog title="产品详细信息" :visible.sync="addFormVisible" @close="closeDialog('addForm')" center="true">
       <el-form :model="addForm" :rules="addRule" ref="addForm">
 
+         <el-form-item label="产品图标" :label-width="formLabelWidth" prop="addIconName">
+            <!-- <input id="fileInput"  @change="uploading($event)" type="file" accept="image/*"> -->
+            <el-upload
+              class="upload-demo"
+              :on-preview="handlePreview"
+              :on-remove="handleRemove"
+              :file-list="fileList2"
+              list-type="picture">
+              <el-button size="small" type="primary">点击上传</el-button>
+              <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+            </el-upload>
+        </el-form-item> 
         <!--新增表单的左半部分-->
         <el-col :span="12">
           <el-form-item label="产品名称" :label-width="formLabelWidth" prop="addName">
@@ -127,12 +139,7 @@
           <el-form-item label="注意事项" :label-width="formLabelWidth" prop="addTip">
             <el-input  v-model="addForm.addTip" auto-complete="off"></el-input>
           </el-form-item>
-          <el-form-item label="产品图标" :label-width="formLabelWidth" prop="addNetSegment">
-            <input id="fileinput" @change="uploading($event)" type="file" accept="image/*">
-             <!-- <button  @click="submit($event)"></button> -->
-            <!-- <el-button size="small" type="primary">点击上传</el-button> -->
-            <!-- <img :src="src"/> -->
-        </el-form-item> 
+         
         </el-col>
         
         <!--新增表单的右半部分-->
@@ -277,7 +284,7 @@
           { required: true, message: '请选择所属网段', trigger: 'blur' }
         ]
       },
-      categoryList: {},
+      categoryList: [],
       netSegments: [
         {
           id: 1,
@@ -411,6 +418,7 @@
     //编辑按钮点击事件
     handleEdit(index, row) {
 
+  
       this.editFormVisible = true; //将editFormVisible标志位置为true，弹出编辑表单
       //console.log('被点击的产品信息：'+JSON.stringify(row));
       this.editForm = row;
@@ -534,9 +542,7 @@
     uploading(event){
 
     	this.file = event.target.files[0];//获取文件
-      // if (this.file === null) {
-      //   console.log('请上传文件...');
-      // }
+
     	var windowURL = window.URL || window.webkitURL;
       this.file = event.target.files[0];
 
@@ -550,6 +556,8 @@
 
     //新增表单里的确定按钮点击事件
     onAdd(formName) {
+
+      console.log('文件:'+this.addForm.addIconName);
 
       this.$refs[formName].validate((valid) => {
 

@@ -46,6 +46,7 @@
           <span>{{$index+addIndex}}</span>
         </el-table-column>  
         <el-table-column label="产品ID" prop="id" align="center"  v-if="false"></el-table-column>
+        <el-table-column label="产品排序ID" prop="sortId" align="center"  v-if="false"></el-table-column>
         <el-table-column label="产品名称" prop="name" align="center" ></el-table-column>
         <el-table-column label="产品类型" prop="categoryName" align="center" ></el-table-column>
         <el-table-column label="产品描述" prop="desc" align="center"></el-table-column>
@@ -58,8 +59,8 @@
           width="120"
           align="center">
           <template slot-scope="scope">
-            <el-button @click="onProductUp(scope.$index+addIndex, scope.row)" type="text" size="small" v-show="(scope.$index+addIndex) > 1">上移</el-button>
-            <el-button @click="onProductDown(scope.$index+addIndex, scope.row)" type="text" size="small" v-show="(scope.$index+addIndex) < productList.length">下移</el-button>
+            <el-button @click="onProductUp(scope.$index+addIndex)" type="text" size="small" v-show="(scope.$index+addIndex) > 1">上移</el-button>
+            <el-button @click="onProductDown(scope.$index+addIndex)" type="text" size="small" v-show="(scope.$index+addIndex) < productList.length">下移</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -85,7 +86,7 @@
           <span>{{$index+addIndex}}</span>  
         </el-table-column>  
         <el-table-column label="产品类型ID" prop="id" align="center"  v-if="false" ></el-table-column>
-        <el-table-column label="产品类型排序ID" prop="orderId" align="center"  v-if="false" ></el-table-column>
+        <el-table-column label="产品类型排序ID" prop="sortId" align="center"  v-if="false" ></el-table-column>
         <el-table-column label="产品类型名称" prop="name" align="center" ></el-table-column>
         <el-table-column
           label="操作"
@@ -133,8 +134,8 @@
         keyWord: '', //搜索的关键字
         categoryTableData: [], 
         productTableData: [],
-        categoryList: {},
-        productList: {},
+        categoryList: [],
+        productList: [],
         categoryId: 1,
         formLabelWidth: '80px'
       }
@@ -147,7 +148,7 @@
       this.productTableVisible = false;
       this.selectVisible = false;
       this.getCategorys('/api/v1/categorys');
-      this.getCategorys('/api/v1/categorys?page=1'+'&pagesize='+this.pageSize);
+      //this.getCategorys('/api/v1/categorys?page=1'+'&pagesize='+this.pageSize);
     
 
     },
@@ -173,37 +174,42 @@
             //获取返回的产品信息列表数据
             let result = response.data.extData.productList.rows;
 
-            if (url.indexOf('?') === -1) {
-              this.total = response.data.extData.productList.count;
-              this.productList = result;
-            } else {
+            //将获取的数据按sortId升序排序
+            result.sort(function(a,b) {
+              return a.sortId-b.sortId;
+            });
+
+            //获取返回的产品信息列表数据的总记录数
+            this.total = response.data.extData.productList.count;
+
+            this.productList = result;
+
+            //确定数组分割的开始索引
+            let startIndex = (this.currentPage - 1) * this.pageSize;
+
+            //确定数组分割的结束索引
+            let endIndex = this.currentPage * this.pageSize;
+
+            //使用数组的slice方法对result进行分割,以达到分页的效果
+            let resultData = result.slice(startIndex, endIndex);
             
-              //将产品信息列表数据先按照categoryId升序排序
-              //若categoryId相同，则按照sortId升序排序
-              result.sort(function(a,b) {
-                if (a.categoryId!==b.categoryId) {
-                  return a.categoryId-b.categoryId;
-                } else {
-                  return a.sortId-b.sortId;
-                }
-              });
+            //解析产品信息列表数据，并将其赋值给productTableData
+            //使数据显示在表格上
+            for (let i = 0; i < resultData.length; i++) {
 
-              //解析产品信息列表数据，并将其赋值给productTableData
-              //使数据显示在表格上
-              for (let i = 0; i < result.length; i++) {
-
-                let product = {};
-                product.id = result[i].id; //产品ID
-                product.name = result[i].name; //产品名称
-                product.categoryName = result[i].Category.name; //产品类型
-                product.desc = result[i].desc; //产品描述
-                product.url = result[i].url; //产品网址
-                product.tip = result[i].tip; // 产品注意事项
-                product.netSegment = result[i].netSegment; //产品所属网段
-                data[i] = product;
-              }   
-              this.productTableData = data;
-            }
+              let product = {};
+              product.id = resultData[i].id; //产品ID
+              product.name = resultData[i].name; //产品名称
+              product.categoryName = resultData[i].Category.name; //产品类型
+              product.desc = resultData[i].desc; //产品描述
+              product.url = resultData[i].url; //产品网址
+              product.tip = resultData[i].tip; // 产品注意事项
+              product.netSegment = resultData[i].netSegment; //产品所属网段
+              product.sortId = resultData[i].sortId;
+              data[i] = product;
+            }   
+            this.productTableData = data;
+            
           } else {
             this.$message({
               type: 'error',
@@ -240,35 +246,40 @@
               message: '获取产品类型列表成功'
             });  
 
-            // if (url.indexOf('?') === -1) {
-            //   this.total = response.data.extData.categoryList.count;
-            // }
             //获取返回的产品类型列表数据
             let result = response.data.extData.categoryList.rows;
 
-            if (url.indexOf('?') === -1) {
-              //获取产品类型列表的记录数
-              this.total = response.data.extData.categoryList.count;
-              this.categoryList = result;
-            } else {
+            //将获取的数据按sortId升序排序
+            result.sort(function(a,b) {
+              return a.sortId-b.sortId;
+            });
 
-              //将获取的数据按sortId升序排序
-              result.sort(function(a,b) {
-                return a.sortId-b.sortId;
-              });
+         
+            //获取产品类型列表的记录数
+            this.total = response.data.extData.categoryList.count;
+            this.categoryList = result;
+      
+            //确定数组分割的开始索引
+            let startIndex = (this.currentPage - 1) * this.pageSize;
 
-              //解析产品信息列表数据，并将其赋值给categoryTableData
-              //使数据显示在表格上
-              for (let i = 0; i < result.length; i++) {
+            //确定数组分割的结束索引
+            let endIndex = this.currentPage * this.pageSize;
 
-                let category = {};
-                category.id = result[i].id; //产品类型ID
-                category.name = result[i].name; //产品类型名称
-                category.orderId = i; //产品类型排序ID
-                data[i] = category;
-              }   
-              this.categoryTableData = data;
-            }  
+            //使用数组的slice方法对result进行分割,以达到分页的效果
+            let resultData = result.slice(startIndex, endIndex);
+            
+            //解析产品信息列表数据，并将其赋值给categoryTableData
+            //使数据显示在表格上
+            for (let i = 0; i < resultData.length; i++) {
+
+              let category = {};
+              category.id = resultData[i].id; //产品类型ID
+              category.name = resultData[i].name; //产品类型名称
+              category.sortId = resultData[i].sortId; //产品类型排序ID
+              data[i] = category;
+            }   
+            this.categoryTableData = data;
+
           } else {
             this.$message({
               type: 'error',
@@ -289,13 +300,13 @@
       //单选框选择监听事件
       onRadioChange(value) {
         console.log("改变后的值："+value);
+
+        this.currentPage = 1;
         if (value === 1) {
           this.categoryTableVisible = true;
           this.productTableVisible = false;
           this.selectVisible = false;
-          //this.categoryName = '';
           this.getCategorys('/api/v1/categorys');
-          this.getCategorys('/api/v1/categorys?page=1&pagesize='+this.pageSize);
 
           console.log("类型列表");
         } else {
@@ -303,15 +314,15 @@
           this.productTableVisible = true;
           this.selectVisible = true;
           this.categoryName = this.categoryList[0].name;
+
           for (let i=0;i<this.categoryList.length;i++) {
             if (this.categoryList[i].name === this.categoryList[0].name) {
               this.categoryId = this.categoryList[i].id;
             }
           }
-
-          this.currentPage = 1;
+    
           this.getProducts('/api/v1/products/'+this.categoryId);
-          this.getProducts('/api/v1/products/'+this.categoryId+'?page=1&pagesize='+this.pageSize);
+          
           console.log("产品列表");
         }
       },
@@ -329,15 +340,18 @@
           }
         }
         this.getProducts('/api/v1/products/'+this.categoryId);
-        this.getProducts('/api/v1/products/'+this.categoryId+'?page=1&pagesize='+this.pageSize);
+         
         console.log("选择的值："+value);
       },
 
       handleCurrentChange(val) {
+
         this.currentPage = val;
         this.addIndex = (this.currentPage - 1) * this.pageSize +1;
         if (this.categoryTableVisible === true) {
-          this.getCategorys('/api/v1/categorys?page='+this.currentPage+'&pagesize='+this.pageSize);
+
+          this.getCategorys('/api/v1/categorys');
+
         } else if (this.productTableVisible === true) {
 
           for (let i=0;i<this.categoryList.length;i++) {
@@ -345,104 +359,288 @@
               this.categoryId = this.categoryList[i].id;
             }
           }
-          this.getProducts('/api/v1/products/'+this.categoryId+'?page='+this.currentPage+'&pagesize='+this.pageSize);
+          this.getProducts('/api/v1/products/'+this.categoryId);
         }
       },
 
       //产品排序中的上移按钮点击事件
       onProductUp(index) {
-
-        console.log('点击的数据：'+JSON.stringify(this.productList[index-1]));
-
-        console.log('点击的上一行数据：'+JSON.stringify(this.productList[index-2]));
-
+        
+        //上一行数据的id
         let prevId = this.productList[index-2].id;
-
+        //当前需要上移的数据的id
         let currId = this.productList[index-1].id;
-
+        //上一行数据的sortId
         let prevSortId = this.productList[index-2].sortId;
-
+        //当前需要上移的数据的sortId
         let currSorId = this.productList[index-1].sortId;
 
         let currData = {
           sortId: currSorId
         };
-
         let preData = {
           sortId: prevSortId
         };
 
-        // this.$http.put("/api/v1/product/"+prevId, currData)
-        // .then((response) => {
-        //   let resultCode = response.data.extData.resultCode;
-        //     if (resultCode === 1) {
+        this.$http.put("/api/v1/product/"+prevId, currData)
+        .then((response) => {
+          let resultCode = response.data.extData.resultCode;
+            if (resultCode === 1) {
 
-        //       this.$message({
-        //         type: 'success',
-        //         message: '修改成功'
-        //       });     
+              this.$message({
+                type: 'success',
+                message: '修改成功'
+              });     
 
-        //       this.$http.put("/api/v1/product/"+currId, preData)
-        //       .then((response) => {
-        //         let resultCode = response.data.extData.resultCode;
-        //         if (resultCode === 1) {
-        //           this.$message({
-        //             type: 'success',
-        //             message: '修改成功'
-        //           });     
+              this.$http.put("/api/v1/product/"+currId, preData)
+              .then((response) => {
+                let resultCode = response.data.extData.resultCode;
+                if (resultCode === 1) {
+                  this.$message({
+                    type: 'success',
+                    message: '修改成功'
+                  });     
 
-        //           this.getProducts('/api/v1/products/'+this.categoryId+'?page='+this.currentPage+'&pagesize='+this.pageSize);
-        //         } else {
-        //           this.$message({
-        //             type: 'error',
-        //             message: '修改失败'
-        //           });   
-        //         }
-        //       }).catch((err) => {
-        //         this.$message({
-        //           type: 'error',
-        //           message: '修改失败'
-        //         });   
-        //         console.log(err);
-        //       });
-        //       //刷新表格数据
-        //       //this.getProducts('/api/v1/products?page='+this.currentPage+'&pagesize='+this.pageSize);
-        //     } else {
+                  this.getProducts('/api/v1/products/'+this.categoryId);
+                } else {
+                  this.$message({
+                    type: 'error',
+                    message: '修改失败'
+                  });   
+                }
+              }).catch((err) => {
+                this.$message({
+                  type: 'error',
+                  message: '修改失败'
+                });   
+                console.log(err);
+              });
+          
+            } else {
 
-        //       this.$message({
-        //         type: 'error',
-        //         message: '修改失败'
-        //       });    
-        //     }
-        // }).catch((err) => {
-        //   this.$message({
-        //     type: 'error',
-        //     message: '修改顺序失败'
-        //   });
-        //   console.log(error);
-        // });
+              this.$message({
+                type: 'error',
+                message: '修改失败'
+              });    
+            }
+        }).catch((err) => {
+          this.$message({
+            type: 'error',
+            message: '修改失败'
+          });
+          console.log(error);
+        });
 
-        // console.log('点击的上一行数据：'+JSON.stringify(this.productList[index-2]));
-        // //this.$http.put('/api/v1/product/'+this.productList[firstIndex-1].id,{sortId:})
-        // console.log('点击的当前index:'+index);
-        // console.log('点击的scope:'+JSON.stringify(scope));
-        
-        //console.log('点击的row:'+JSON.stringify(scope));
+
       },
 
       //产品排序中的下移按钮的点击事件
       onProductDown(index) {
 
+        //下一行数据的id
+        let nextId = this.productList[index].id;
+        //当前需要上移的数据的id
+        let currId = this.productList[index-1].id;
+        //下一行数据的sortId
+        let nextSortId = this.productList[index].sortId;
+        //当前需要上移的数据的sortId
+        let currSorId = this.productList[index-1].sortId;
+
+        let currData = {
+          sortId: currSorId
+        };
+        let nextData = {
+          sortId: nextSortId
+        };
+
+        this.$http.put("/api/v1/product/"+nextId, currData)
+        .then((response) => {
+          let resultCode = response.data.extData.resultCode;
+            if (resultCode === 1) {
+
+              this.$message({
+                type: 'success',
+                message: '修改成功'
+              });     
+
+              this.$http.put("/api/v1/product/"+currId, nextData)
+              .then((response) => {
+                let resultCode = response.data.extData.resultCode;
+                if (resultCode === 1) {
+                  this.$message({
+                    type: 'success',
+                    message: '修改成功'
+                  });     
+
+                  this.getProducts('/api/v1/products/'+this.categoryId);
+                } else {
+                  this.$message({
+                    type: 'error',
+                    message: '修改失败'
+                  });   
+                }
+              }).catch((err) => {
+                this.$message({
+                  type: 'error',
+                  message: '修改失败'
+                });   
+                console.log(err);
+              });
+          
+            } else {
+
+              this.$message({
+                type: 'error',
+                message: '修改失败'
+              });    
+            }
+        }).catch((err) => {
+          this.$message({
+            type: 'error',
+            message: '修改失败'
+          });
+          console.log(error);
+        });
+
       },
 
       //类型排序中的上移按钮点击事件
       onCategoryUp(index, row) {
-        
+
+         //上一行数据的id
+        let prevId = this.categoryList[index-2].id;
+        //当前需要上移的数据的id
+        let currId = this.categoryList[index-1].id;
+        //上一行数据的sortId
+        let prevSortId = this.categoryList[index-2].sortId;
+        //当前需要上移的数据的sortId
+        let currSorId = this.categoryList[index-1].sortId;
+
+        let currData = {
+          sortId: currSorId
+        };
+        let preData = {
+          sortId: prevSortId
+        };
+
+        this.$http.put("/api/v1/category/"+prevId, currData)
+        .then((response) => {
+          let resultCode = response.data.extData.resultCode;
+            if (resultCode === 1) {
+
+              this.$message({
+                type: 'success',
+                message: '修改成功'
+              });     
+
+              this.$http.put("/api/v1/category/"+currId, preData)
+              .then((response) => {
+                let resultCode = response.data.extData.resultCode;
+                if (resultCode === 1) {
+                  this.$message({
+                    type: 'success',
+                    message: '修改成功'
+                  });     
+
+                  this.getCategorys('/api/v1/categorys');
+                } else {
+                  this.$message({
+                    type: 'error',
+                    message: '修改失败'
+                  });   
+                }
+              }).catch((err) => {
+                this.$message({
+                  type: 'error',
+                  message: '修改失败'
+                });   
+                console.log(err);
+              });
+          
+            } else {
+
+              this.$message({
+                type: 'error',
+                message: '修改失败'
+              });    
+            }
+        }).catch((err) => {
+          this.$message({
+            type: 'error',
+            message: '修改失败'
+          });
+          console.log(error);
+        });
+
+
       },
 
       //类型排序中的下移按钮点击事件
       onCategoryDown(index, row) {
-        
+        //下一行数据的id
+        let nextId = this.categoryList[index].id;
+        //当前需要上移的数据的id
+        let currId = this.categoryList[index-1].id;
+        //下一行数据的sortId
+        let nextSortId = this.categoryList[index].sortId;
+        //当前需要上移的数据的sortId
+        let currSorId = this.categoryList[index-1].sortId;
+
+        let currData = {
+          sortId: currSorId
+        };
+        let nextData = {
+          sortId: nextSortId
+        };
+
+        this.$http.put("/api/v1/category/"+nextId, currData)
+        .then((response) => {
+          let resultCode = response.data.extData.resultCode;
+            if (resultCode === 1) {
+
+              this.$message({
+                type: 'success',
+                message: '修改成功'
+              });     
+
+              this.$http.put("/api/v1/category/"+currId, nextData)
+              .then((response) => {
+                let resultCode = response.data.extData.resultCode;
+                if (resultCode === 1) {
+                  this.$message({
+                    type: 'success',
+                    message: '修改成功'
+                  });     
+
+                  this.getCategorys('/api/v1/categorys');
+                } else {
+                  this.$message({
+                    type: 'error',
+                    message: '修改失败'
+                  });   
+                }
+              }).catch((err) => {
+                this.$message({
+                  type: 'error',
+                  message: '修改失败'
+                });   
+                console.log(err);
+              });
+          
+            } else {
+
+              this.$message({
+                type: 'error',
+                message: '修改失败'
+              });    
+            }
+        }).catch((err) => {
+          this.$message({
+            type: 'error',
+            message: '修改失败'
+          });
+          console.log(error);
+        });
       }
     }
 }
