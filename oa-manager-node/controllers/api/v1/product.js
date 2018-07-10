@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-28 17:04:50 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-07-07 15:40:48
+ * @Last Modified time: 2018-07-10 21:20:51
  */
 
 const productService = require('../../../services/product');
