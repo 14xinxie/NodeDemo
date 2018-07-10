@@ -41,6 +41,7 @@
         <el-table-column label="产品网址" prop="url" align="center" ></el-table-column>
         <el-table-column label="注意事项" prop="tip" align="center" ></el-table-column>
         <el-table-column label="所属网段" prop="netSegment" align="center" ></el-table-column>
+        <el-table-column label="产品图标名称" prop="iconName" align="center" v-if="false" ></el-table-column>
         <el-table-column
           fixed="right"
           label="操作"
@@ -71,6 +72,14 @@
     <el-dialog title="产品详细信息" :visible.sync="editFormVisible" @close="closeDialog('editForm')">
       <el-form :model="editForm" :rules="editRule" ref="editForm">
 
+
+         <el-form-item label="产品图标" :label-width="formLabelWidth" prop="addIconName">
+            <input @change="upLoadFile($event)" type="file" accept="image/*" ref="file">
+            <div class="img-box" v-if="imageShow">
+              <img :src="imageUrl" class="cover-img" >
+              <span class="image-remove" @click="removeImage(index)">+</span>                
+            </div>  
+        </el-form-item> 
         <!--编辑表单的左半部分-->
         <el-col :span="12">
           <!--设置为隐藏项-->
@@ -116,16 +125,11 @@
       <el-form :model="addForm" :rules="addRule" ref="addForm">
 
          <el-form-item label="产品图标" :label-width="formLabelWidth" prop="addIconName">
-            <!-- <input id="fileInput"  @change="uploading($event)" type="file" accept="image/*"> -->
-            <el-upload
-              class="upload-demo"
-              :on-preview="handlePreview"
-              :on-remove="handleRemove"
-              :file-list="fileList2"
-              list-type="picture">
-              <el-button size="small" type="primary">点击上传</el-button>
-              <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
-            </el-upload>
+            <input @change="upLoadFile($event)" type="file" accept="image/*" ref="file">
+            <div class="img-box" v-if="imageShow">
+              <img :src="imageUrl" class="cover-img" >
+              <span class="image-remove" @click="removeImage(index)">+</span>                
+            </div>  
         </el-form-item> 
         <!--新增表单的左半部分-->
         <el-col :span="12">
@@ -144,7 +148,7 @@
         
         <!--新增表单的右半部分-->
         <el-col :span="12">
-          <el-form-item label="产品类型" :label-width="formLabelWidth" prop="addaCtegoryName" >
+          <el-form-item label="产品类型" :label-width="formLabelWidth" prop="addCategoryName" >
             <el-select v-model="addForm.addCategoryName" placeholder="请选择产品类型">
               <el-option v-for="item in categoryList" :key="item.id" :label="item.name" 
               :value="item.name"></el-option>
@@ -231,8 +235,10 @@
     };
 
     return {
+      baseUrl:'http://localhost:5001/image/',
+      imageShow: false,
       file: '',
-      src: '',
+      imageUrl: '',
       currentPage: 1,
       pageSize: 10,
       total: 1,
@@ -358,6 +364,7 @@
               product.url = result[i].url; //产品网址
               product.tip = result[i].tip; // 产品注意事项
               product.netSegment = result[i].netSegment; //产品所属网段
+              product.iconName = result[i].iconName; //产品图标名称
               data[i] = product;
             }   
             this.tableData = data;
@@ -422,6 +429,9 @@
       this.editFormVisible = true; //将editFormVisible标志位置为true，弹出编辑表单
       //console.log('被点击的产品信息：'+JSON.stringify(row));
       this.editForm = row;
+
+      this.imageShow = true;
+      this.imageUrl = this.baseUrl+row.iconName;
 
     },
 
@@ -539,21 +549,26 @@
       });
     },
 
-    uploading(event){
+    //上传的文件改变时的监听事件
+    upLoadFile(event){
 
     	this.file = event.target.files[0];//获取文件
 
     	var windowURL = window.URL || window.webkitURL;
-      this.file = event.target.files[0];
 
-      
+  
       //创建图片文件的url
-      this.src = windowURL.createObjectURL(event.target.files[0]);
+      this.imageUrl = windowURL.createObjectURL(event.target.files[0]);
 
-      console.log('图片的路径：'+this.file.name);
-
+      if (this.imageUrl !== '') {
+        this.imageShow = true;
+      }
   	},
 
+    removeImage(index) {
+      this.imageShow = false;
+      this.$ref.file = null;
+    },
     //新增表单里的确定按钮点击事件
     onAdd(formName) {
 
@@ -651,6 +666,7 @@
 
     //关闭编辑和新增表单的对话框时执行此方法
     closeDialog(formName) {
+      this.imageShow = false;
       if (formName === 'editForm') {
         this.editFormVisible = false;
       } else if (formName === 'addForm') {
@@ -689,5 +705,45 @@
   .row-bg {
     padding: 10px 0;
     background-color: #f9fafc;
+  }
+
+  .img-box{
+
+    /* 设置inline-block使img填充div宽高，然后用+定位到右上角，block占据一整行，不能自适应内部元素宽高，
+    inline使宽度自适应，但是无法设置宽高：宽高无效，+就无法定位到右上角 */
+    display: inline-block;  
+
+    border: 1px solid #ececec;
+    position: relative;
+     margin-left: 50px;
+  }
+
+  /* 设置最大宽度，以免溢出：：：：不要设置百分比80%，否则div会是img的125%，导致+定位到右侧 */
+  .cover-img{
+    max-width: 100px;
+    min-width: 50px;
+   
+  }
+
+
+  .image-remove{
+    background-color: white;
+    font-color: #ececec;
+    font-size: 30px;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+
+    border-radius: 100%;
+    transform: rotate(45deg); 
+    cursor:pointer;
+    opacity: 0.5;
+    /* top、right: 距离上侧2个像素，距离右侧两个像素，也就是右上角 */
+    top:2px;
+    right:2px;   
+    /* 块元素:设置宽和高，inline元素设置宽高无效 */
+    display: block; 
+    /* 绝对定位，关联父元素的relative */
+    position: absolute; 
   }
 </style>
