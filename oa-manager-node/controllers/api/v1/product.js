@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2018-04-28 17:04:50 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2018-07-10 21:20:51
+ * @Last Modified time: 2018-07-11 20:21:19
  */
 
 const productService = require('../../../services/product');
@@ -183,96 +183,149 @@ async function delProduct(req, res, next) {
 async function modProduct(req, res, next) {
 
   
-  console.log('更新的params请求数据：'+JSON.stringify(req.params));
+  let form = new multiparty.Form();
+  //设置form表单传入的字段属性、属性值的编码。默认为utf8。
+  form.encoding = 'utf-8';
+  //设置上传的文件的保存目录，该目录必须存在
+  form.uploadDir='public/upload/' 
 
-  console.log('更新的body请求数据：'+JSON.stringify(req.body));
+  //解析表单数据
+  form.parse(req, async function (err, fields, files) {
 
-  let schema = {
-    id: { in: 'params', isInt: true, optional: false },
-    name: { in: 'body', notEmpty: true, optional: true },
-    desc: { in: 'body', notEmpty: true, optional: true},
-    url: { in: 'body', notEmpty: true, optional: true },
-    categoryId: { in: 'body', isInt: true, optional: true },
-    tip: { in: 'body', notEmpty: true, optional: true },
-    netSegment: { in: 'body', notEmpty:true, optional: true },
-    sortId: { in: 'body', isInt: true, optional: true }
-  };
+    let formData = {};
+    let fileUpload = false;
 
-  await paramValidator(schema, req);
+   
+    console.log(JSON.stringify(files));
+    if (files === undefined) {
 
-  let getProOptions = {
-    where: { id: req.params.id }
-  };
+      fileUpload = false;
+      console.log('没有文件上传');
+    } else {
+      
+      fileUpload = true;
 
-  //获取修改前的产品信息
-  let oldProduct = await productService.getProductDetail(getProOptions);
+      let file = files['iconFile'][0];
+      //获取文件类型
+      let fileType = path.extname(file.originalFilename);  
 
-  console.log('修改前的产品信息：'+JSON.stringify(oldProduct));
+      //增加表单项iconName，存储图标的名称
+      formData['iconName'] = uuid.v1()+fileType+'';
+      console.log('文件名：'+formData['iconName']);
 
+      //对上传的文件重命名
+      fs.renameSync(file.path,form.uploadDir+formData['iconName']);
+
+       //将表单中的数据循环取出并重新赋值给变量formData
+      for(let item in fields) {
+      
+        formData[item] = fields[item].toString();
+      }
+    
+      //将表单的数据赋值给req.body
+      req.body = formData;
+    }
+
+    
+    let schema = {
+      id: { in: 'params', isInt: true, optional: false },
+      name: { in: 'body', notEmpty: true, optional: true },
+      desc: { in: 'body', notEmpty: true, optional: true},
+      url: { in: 'body', notEmpty: true, optional: true },
+      categoryId: { in: 'body', isInt: true, optional: true },
+      tip: { in: 'body', notEmpty: true, optional: true },
+      netSegment: { in: 'body', notEmpty:true, optional: true },
+      sortId: { in: 'body', isInt: true, optional: true }
+    };
   
+    await paramValidator(schema, req);
 
-  //获取session中的用户信息
-  let user = req.session.user;
-
-  let logContent = '';
-
-  if (req.body.categoryId !== undefined) {
-    let getCateOptions = {
-      where: { id: req.body.categoryId }
+    let getOptions = {
+      where: { id: req.params.id }
     };
 
-    //获取修改后的产品类型名称
-    let newCategory = await categoryService.getCategoryDetail(getCateOptions);
+    let oldProduct = await productService.getProductDetail(getOptions);
 
-    if (newCategory.name !== undefined && oldProduct.Category.name !== newCategory.name) {
-      logContent += '修改产品类型名称'+oldProduct.Category.name+'为'+newCategory.name;
+    console.log('原始产品信息：'+JSON.stringify(oldProduct));
+
+    //判断产品原始图标的文件路径是否存在
+    if (fs.existsSync(form.uploadDir+oldProduct.iconName) && fileUpload) {
+      //删除原始图标
+      fs.unlink(form.uploadDir+oldProduct.iconName, function(err, result) {
+        if (err) {
+          console.log('删除文件失败');
+          throw err;
+        }
+        console.log('删除文件成功')
+      });
     }
-  }
-  
-  
-  
 
-  //判断产品各个字段的信息是否被修改，并增加相应的日志信息
-  if (req.body.name !== undefined &&oldProduct.name !== req.body.name) {
-    logContent += '修改产品名称'+oldProduct.name+'为'+req.body.name;
-  } 
-  if (req.body.desc !== undefined && oldProduct.desc !== req.body.desc) {
-    logContent += '修改产品描述'+oldProduct.desc+'为'+req.body.desc;
-  } 
-  if (req.body.url !== undefined && oldProduct.url !== req.body.url) {
-    logContent += '修改产品网址'+oldProduct.url+'为'+req.body.url;
-  } 
-  
-  if (req.body.tip !== undefined && oldProduct.tip !== req.body.tip) {
-    logContent += '修改产品注意事项'+oldProduct.tip+'为'+req.body.tip;
-  } 
-  if (req.body.netSegment !== undefined && oldProduct.netSegment !== req.body.netSegment) {
-    logContent += '修改产品所属网段'+oldProduct.netSegment+'为'+req.body.netSegment;
-  } 
-  if (req.body.sortId !== undefined && oldProduct.sortId !== req.body.sortId) {
-    logContent += '修改产品内部排序'+oldProduct.sortId+'为'+req.body.sortId;
-  }
-  
-  let modLog = {
-    userId: user.id,
-    content: user.nickName+logContent+''
-  };
-  
-  let modOptions = {
-    where: { id: req.params.id },
-    product: req.body,
-    log: modLog
-  };
+    //获取session中的用户信息
+    let user = req.session.user;
 
-  try {
+    //日志内容
+    let logContent = '';
+    
+    if (fileUpload) {
+      logContent += '修改产品图标';
+    }
 
-    await productService.modProduct(modOptions);
-    return next({ code: 0, msg: '修改产品信息成功', ext: { resultCode: 1 } });
-  } catch (error) {
+    if (req.body.categoryId !== undefined) {
+      let getCateOptions = {
+        where: { id: req.body.categoryId }
+      };
 
-    console.log(error);
-    return next({ code: 1, msg: '修改产品信息失败', ext: { resultCode: 0 } });
-  }
+      //获取修改后的产品类型名称
+      let newCategory = await categoryService.getCategoryDetail(getCateOptions);
+
+      if (newCategory.name !== undefined && oldProduct.Category.name !== newCategory.name) {
+        logContent += '修改产品类型名称'+oldProduct.Category.name+'为'+newCategory.name;
+      }
+    }
+    
+    //判断产品各个字段的信息是否被修改，并增加相应的日志信息
+    if (req.body.name !== undefined &&oldProduct.name !== req.body.name) {
+      logContent += '修改产品名称'+oldProduct.name+'为'+req.body.name;
+    } 
+    if (req.body.desc !== undefined && oldProduct.desc !== req.body.desc) {
+      logContent += '修改产品描述'+oldProduct.desc+'为'+req.body.desc;
+    } 
+    if (req.body.url !== undefined && oldProduct.url !== req.body.url) {
+      logContent += '修改产品网址'+oldProduct.url+'为'+req.body.url;
+    } 
+    
+    if (req.body.tip !== undefined && oldProduct.tip !== req.body.tip) {
+      logContent += '修改产品注意事项'+oldProduct.tip+'为'+req.body.tip;
+    } 
+    if (req.body.netSegment !== undefined && oldProduct.netSegment !== req.body.netSegment) {
+      logContent += '修改产品所属网段'+oldProduct.netSegment+'为'+req.body.netSegment;
+    } 
+    if (req.body.sortId !== undefined && oldProduct.sortId !== req.body.sortId) {
+      logContent += '修改产品内部排序'+oldProduct.sortId+'为'+req.body.sortId;
+    }
+
+    let modLog = {
+      userId: user.id,
+      content: user.nickName+'修改产品'+oldProduct.name+':'+logContent+''
+    };
+    
+    let modOptions = {
+      where: { id: req.params.id },
+      product: req.body,
+      log: modLog
+    };
+
+    try {
+
+      await productService.modProduct(modOptions);
+      return next({ code: 0, msg: '修改产品信息成功', ext: { resultCode: 1 } });
+    } catch (error) {
+
+      console.log(error);
+      return next({ code: 1, msg: '修改产品信息失败', ext: { resultCode: 0 } });
+    }
+
+  });    
 
 }
 

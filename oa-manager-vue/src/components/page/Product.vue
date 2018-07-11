@@ -68,17 +68,24 @@
   		</div>
 		</el-row>
 
+    <!--点击查看大图时的对话框-->
+    <el-dialog :visible.sync="dialogVisible">
+      <img width="100%" :src="dialogImageUrl" alt="">
+    </el-dialog>
     <!--编辑产品信息的对话框部分-->
     <el-dialog title="产品详细信息" :visible.sync="editFormVisible" @close="closeDialog('editForm')">
       <el-form :model="editForm" :rules="editRule" ref="editForm">
-
-
-         <el-form-item label="产品图标" :label-width="formLabelWidth" prop="addIconName">
-            <input @change="upLoadFile($event)" type="file" accept="image/*" ref="file">
-            <div class="img-box" v-if="imageShow">
-              <img :src="imageUrl" class="cover-img" >
-              <span class="image-remove" @click="removeImage(index)">+</span>                
-            </div>  
+        <el-form-item label="产品图标" :label-width="formLabelWidth">
+          <el-upload
+            action="https://jsonplaceholder.typicode.com/posts/"
+            list-type="picture-card"
+            :disabled="uploadShow"
+            :file-list="imageList"
+            :before-upload="beforeUpload"
+            :on-preview="handlePictureCardPreview"
+            :on-remove="handleRemove">
+            <i class="el-icon-plus"></i>
+          </el-upload>
         </el-form-item> 
         <!--编辑表单的左半部分-->
         <el-col :span="12">
@@ -123,42 +130,44 @@
      <!--新增产品信息的对话框部分-->
     <el-dialog title="产品详细信息" :visible.sync="addFormVisible" @close="closeDialog('addForm')" center="true">
       <el-form :model="addForm" :rules="addRule" ref="addForm">
-
-         <el-form-item label="产品图标" :label-width="formLabelWidth" prop="addIconName">
-            <input @change="upLoadFile($event)" type="file" accept="image/*" ref="file">
-            <div class="img-box" v-if="imageShow">
-              <img :src="imageUrl" class="cover-img" >
-              <span class="image-remove" @click="removeImage(index)">+</span>                
-            </div>  
+        <el-form-item label="产品图标" :label-width="formLabelWidth" >
+          <el-upload
+            action="https://jsonplaceholder.typicode.com/posts/"
+            list-type="picture-card"
+            :disabled="uploadShow"
+            :file-list="imageList"
+            :before-upload="beforeUpload"
+            :on-preview="handlePictureCardPreview"
+            :on-remove="handleRemove">
+            <i class="el-icon-plus"></i>
+          </el-upload>
         </el-form-item> 
         <!--新增表单的左半部分-->
         <el-col :span="12">
-          <el-form-item label="产品名称" :label-width="formLabelWidth" prop="addName">
-            <el-input v-model="addForm.addName" auto-complete="off" ></el-input>
-
+          <el-form-item label="产品名称" :label-width="formLabelWidth" prop="name">
+            <el-input v-model="addForm.name" auto-complete="off" ></el-input>
           </el-form-item>
-          <el-form-item label="产品描述" :label-width="formLabelWidth" prop="addDesc">
-            <el-input type="textarea" autosize v-model="addForm.addDesc" auto-complete="off"></el-input>
+          <el-form-item label="产品描述" :label-width="formLabelWidth" prop="desc">
+            <el-input type="textarea" autosize v-model="addForm.desc" auto-complete="off"></el-input>
           </el-form-item>
-          <el-form-item label="注意事项" :label-width="formLabelWidth" prop="addTip">
-            <el-input  v-model="addForm.addTip" auto-complete="off"></el-input>
+          <el-form-item label="注意事项" :label-width="formLabelWidth" prop="tip">
+            <el-input  v-model="addForm.tip" auto-complete="off"></el-input>
           </el-form-item>
-         
         </el-col>
         
         <!--新增表单的右半部分-->
         <el-col :span="12">
-          <el-form-item label="产品类型" :label-width="formLabelWidth" prop="addCategoryName" >
-            <el-select v-model="addForm.addCategoryName" placeholder="请选择产品类型">
+          <el-form-item label="产品类型" :label-width="formLabelWidth" prop="categoryName" >
+            <el-select v-model="addForm.categoryName" placeholder="请选择产品类型">
               <el-option v-for="item in categoryList" :key="item.id" :label="item.name" 
               :value="item.name"></el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="产品网址" :label-width="formLabelWidth" prop="addUrl">
-            <el-input v-model="addForm.addUrl" auto-complete="off"></el-input>
+          <el-form-item label="产品网址" :label-width="formLabelWidth" prop="url">
+            <el-input v-model="addForm.url" auto-complete="off"></el-input>
           </el-form-item>
-          <el-form-item label="所属网段" :label-width="formLabelWidth" prop="addNetSegment">
-            <el-select v-model="addForm.addNetSegment" placeholder="请选择网段">
+          <el-form-item label="所属网段" :label-width="formLabelWidth" prop="netSegment">
+            <el-select v-model="addForm.netSegment" placeholder="请选择网段">
               <el-option v-for="item in netSegments" :key="item.id" :label="item.name" :value="item.name"></el-option>
             </el-select>
           </el-form-item>
@@ -235,10 +244,12 @@
     };
 
     return {
+      dialogImageUrl: '', //对话框大图的url地址
+      dialogVisible: false, //显示大图的对话框是否可见的标志位
       baseUrl:'http://localhost:5001/image/',
-      imageShow: false,
+      imageList: [], //上传的文件列表
+      fileSize: 0, //上传的文件数量
       file: '',
-      imageUrl: '',
       currentPage: 1,
       pageSize: 10,
       total: 1,
@@ -271,22 +282,22 @@
         ]
       },
       addRule: {
-        addName : [
+        name : [
           { required: true, message: '请填写产品名称', trigger: 'blur' }
         ],
-        addDesc : [
+        desc : [
           { required: true, message: '请填写产品描述', trigger: 'blur' }
         ],
-        addTip : [
+        tip : [
           { required: true, message: '请填写注意事项', trigger: 'blur' }
         ],
-        addCategoryName : [
+        categoryName : [
           { required: true, message: '请选择产品类型', trigger: 'blur' }
         ],
-        addUrl : [
+        url : [
           { required: true, message: '请填写产品网址', trigger: 'blur' }
         ],
-        addNetSegment : [
+        netSegment : [
           { required: true, message: '请选择所属网段', trigger: 'blur' }
         ]
       },
@@ -304,6 +315,15 @@
     }
   },
 
+  computed: {
+    
+    //计算属性uploadShow
+    uploadShow:function() {
+      
+      return this.fileSize > 0;
+    },
+    
+  },
   //vue实例创建时执行该生命周期方法
   created: function () {
     this.getProducts('/api/v1/products');
@@ -318,6 +338,26 @@
   },  
   
   methods: {
+
+    //上传文件之前执行
+    beforeUpload(file) {
+      this.fileSize = 1;
+      console.log('上传文件中...');
+      this.file = file;
+      //console.log(file);
+    },
+
+    //删除图片的点击事件
+    handleRemove(file, fileList) {
+      this.fileSize -= 1;
+      console.log('删除...');
+    },
+
+    //预览大图的点击事件
+    handlePictureCardPreview(file) {
+      this.dialogImageUrl = file.url;
+      this.dialogVisible = true;
+    },
 
     //获取产品信息列表数据
     getProducts(url) {
@@ -404,7 +444,7 @@
             message: '获取产品类型列表成功'
           });  
 
-           //获取返回的产品类型列表数据
+          //获取返回的产品类型列表数据
           let result = response.data.extData.categoryList.rows;
           this.categoryList = result;
         } else {
@@ -425,14 +465,17 @@
     //编辑按钮点击事件
     handleEdit(index, row) {
 
-  
+      //初始化设置imageList为空
+      this.imageList = [];
       this.editFormVisible = true; //将editFormVisible标志位置为true，弹出编辑表单
-      //console.log('被点击的产品信息：'+JSON.stringify(row));
-      this.editForm = row;
-
-      this.imageShow = true;
-      this.imageUrl = this.baseUrl+row.iconName;
-
+      this.editForm = row; //填充编辑表单
+      this.dialogImageUrl = this.baseUrl+row.iconName;
+      this.imageList.push({
+        url: this.baseUrl+row.iconName+'',
+        status: 'finished'
+      });
+  
+      this.fileSize = 1;
     },
 
     //删除按钮点击事件
@@ -461,7 +504,7 @@
             //刷新表格数据
             this.getProducts('/api/v1/products');
             this.getProducts('/api/v1/products?page='+this.currentPage+'&pagesize='+this.pageSize);
-            //console.log("删除后返回的数据"+JSON.stringify(response.data));
+
           } else {
             this.$message({
               type: 'error',
@@ -500,17 +543,35 @@
               categoryId = this.categoryList[i].id;
             }
           }
-          //确定编辑时提交的表单数据
-          let editData = {
-            name: this.editForm.name,
-            categoryId: categoryId,
-            desc: this.editForm.desc,
-            url: this.editForm.url,
-            tip: this.editForm.tip,
-            netSegment: this.editForm.netSegment
-          }; 
 
-          this.$http.put("/api/v1/product/"+this.editForm.id,editData)
+          //判断是否选取了文件上传
+          if (this.file === '') {
+            this.$message({
+              type: 'info',
+              message: '请先上传图片'
+            }); 
+            return;
+          }
+          
+          //确定编辑时提交的表单数据
+          let editFormData = new FormData();
+
+          editFormData.append('name', this.editForm.name);
+          editFormData.append('categoryId', categoryId);
+          editFormData.append('desc', this.editForm.desc);
+          editFormData.append('url', this.editForm.url);
+          editFormData.append('tip', this.editForm.tip);
+          editFormData.append('netSegment', this.editForm.netSegment);
+          editFormData.append('iconFile', this.file);
+
+          //设置formData提交的数据格式为multipart/form-data
+          let confg = {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          };
+
+          this.$http.put("/api/v1/product/"+this.editForm.id,editFormData,confg)
           .then((response) => {
 
             let resultCode = response.data.extData.resultCode;
@@ -549,30 +610,12 @@
       });
     },
 
-    //上传的文件改变时的监听事件
-    upLoadFile(event){
-
-    	this.file = event.target.files[0];//获取文件
-
-    	var windowURL = window.URL || window.webkitURL;
-
-  
-      //创建图片文件的url
-      this.imageUrl = windowURL.createObjectURL(event.target.files[0]);
-
-      if (this.imageUrl !== '') {
-        this.imageShow = true;
-      }
-  	},
-
-    removeImage(index) {
-      this.imageShow = false;
-      this.$ref.file = null;
-    },
     //新增表单里的确定按钮点击事件
     onAdd(formName) {
 
-      console.log('文件:'+this.addForm.addIconName);
+      //初始化设置imageList为空
+      this.imageList = [];
+      this.fileSize = 0;
 
       this.$refs[formName].validate((valid) => {
 
@@ -581,7 +624,7 @@
 
           let categoryId = 1; //给categoryId赋初值，默认为1
           for (let i=0;i<this.categoryList.length;i++) {
-            if (this.categoryList[i].name === this.addForm.addCategoryName) {
+            if (this.categoryList[i].name === this.addForm.categoryName) {
               categoryId = this.categoryList[i].id;
             }
           }
@@ -594,12 +637,13 @@
 
           //统计新增表单种选择的产品类型下产品的数量
           for(let i=0;i<data.length;i++) {
-            if (data[i].categoryName === this.addForm.addCategoryName) {
+            if (data[i].categoryName === this.addForm.categoryName) {
               count++;
             }
           }
 
           if (this.file === '') {
+            
             this.$message({
               type: 'info',
               message: '请先上传图片'
@@ -610,12 +654,12 @@
 
           let addFormData = new FormData();
 
-          addFormData.append('name', this.addForm.addName);
+          addFormData.append('name', this.addForm.name);
           addFormData.append('categoryId', categoryId);
-          addFormData.append('desc', this.addForm.addDesc);
-          addFormData.append('url', this.addForm.addUrl);
-          addFormData.append('tip', this.addForm.addTip);
-          addFormData.append('netSegment', this.addForm.addNetSegment);
+          addFormData.append('desc', this.addForm.desc);
+          addFormData.append('url', this.addForm.url);
+          addFormData.append('tip', this.addForm.tip);
+          addFormData.append('netSegment', this.addForm.netSegment);
           addFormData.append('sortId', count+1);
           addFormData.append('iconFile', this.file);
 
@@ -651,8 +695,8 @@
           }).catch((error) => {
 
             this.$message({
-                type: 'error',
-                message: '添加失败'
+              type: 'error',
+              message: '添加失败'
             });    
             console.log(error);
           });
@@ -666,11 +710,13 @@
 
     //关闭编辑和新增表单的对话框时执行此方法
     closeDialog(formName) {
-      this.imageShow = false;
+      
       if (formName === 'editForm') {
         this.editFormVisible = false;
       } else if (formName === 'addForm') {
         this.addFormVisible = false;
+        this.imageList = []; //初始化设置imageList为空
+        this.file = '';
       }
       //重置表单数据
       this.$refs[formName].resetFields();
@@ -682,14 +728,6 @@
       this.addIndex = (this.currentPage - 1) * this.pageSize +1;
       console.log(`当前页: ${val}`);
       this.getProducts('/api/v1/products?page='+this.currentPage+'&pagesize='+this.pageSize);
-    },
-
-    uploadError() {
-      console.log("上传失败。。。");
-    },
-
-    uploadSuccess() {
-      console.log("上传成功。。。");
     }
   }
 }
@@ -725,7 +763,6 @@
    
   }
 
-
   .image-remove{
     background-color: white;
     font-color: #ececec;
@@ -746,4 +783,7 @@
     /* 绝对定位，关联父元素的relative */
     position: absolute; 
   }
+  .disabled .el-upload--picture-card {
+    display: none;
+}
 </style>
